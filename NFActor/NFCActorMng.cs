@@ -3,7 +3,6 @@
 //     Copyright (C) 2015-2015 lvsheng.huang <https://github.com/ketoo/NFActor>
 // </copyright>
 //-----------------------------------------------------------------------
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -76,6 +75,21 @@ namespace NFrame
 
             return null;
         }
+
+        public override bool RegisterHandler(NFIDENTID xID, NFIActor.Handler handler)
+        {
+            NFIActor xActor = GetActor(xID);
+            if (null != xActor)
+            {
+                xActor.RegisterHandler(handler);
+
+                return true;
+            }
+
+            return false;
+        }
+
+
         public override bool SendMsg(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage)
         {
             NFIActor xActor = GetActor(address);
@@ -89,7 +103,7 @@ namespace NFrame
             return false;
         }
 
-        public override bool Execute(float fLastFrametime, float fStartedTime)
+        public override bool Execute()
         {
             foreach (NFIDENTID k in mxNeedRemove)
             {
@@ -107,10 +121,8 @@ namespace NFrame
 
             foreach (var kv in mxActorDic)
             {
-                kv.Value.Execute(fLastFrametime, fStartedTime);
+                kv.Value.Execute();
             }
-
-
 
             return false;
         }
@@ -119,7 +131,7 @@ namespace NFrame
 
         private readonly ConcurrentDictionary<NFIDENTID, NFIActor> mxActorDic = new ConcurrentDictionary<NFIDENTID, NFIActor>();
         private readonly ConcurrentQueue<NFIDENTID> mxNeedRemove = new ConcurrentQueue<NFIDENTID>();
-        private readonly ConcurrentDictionary<NFIDENTID, NFIActor> mxNeedAdd = new ConcurrentDictionary<NFIDENTID, NFIActor>();
+        //private readonly ConcurrentDictionary<NFIDENTID, NFIActor> mxNeedAdd = new ConcurrentDictionary<NFIDENTID, NFIActor>();
         private int mnActorIndex = 0;
     }
 }

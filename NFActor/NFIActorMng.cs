@@ -3,7 +3,6 @@
 //     Copyright (C) 2015-2015 lvsheng.huang <https://github.com/ketoo/NFActor>
 // </copyright>
 //-----------------------------------------------------------------------
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +20,8 @@ namespace NFrame
         public abstract void ReleaseAllActor();
 
         public abstract NFIActor GetActor(NFIDENTID xID);
+
+        public abstract bool RegisterHandler(NFIDENTID xID, NFIActor.Handler handler); 
 
         public abstract bool SendMsg(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage);
 

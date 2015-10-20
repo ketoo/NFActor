@@ -45,12 +45,8 @@
     <Compile Include="NFBehaviour.cs" />
     <Compile Include="NFCActor.cs" />
     <Compile Include="NFCActorMng.cs" />
-    <Compile Include="NFCComponent.cs" />
-    <Compile Include="NFCComponentMng.cs" />
     <Compile Include="NFIActor.cs" />
     <Compile Include="NFIActorMng.cs" />
-    <Compile Include="NFIComponent.cs" />
-    <Compile Include="NFIComponentMng.cs" />
     <Compile Include="NFIdentID.cs" />
     <Compile Include="NFTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

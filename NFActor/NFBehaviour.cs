@@ -3,7 +3,6 @@
 //     Copyright (C) 2015-2015 lvsheng.huang <https://github.com/ketoo/NFActor>
 // </copyright>
 //-----------------------------------------------------------------------
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +27,7 @@ namespace NFrame
 
         public virtual bool Shut() { return false; }
 
-        public virtual bool Execute(float fLastFrametime, float fStartedTime) { return false; }
+        public virtual bool Execute() { return false; }
 
         public virtual NFIDENTID Self() { return new NFIDENTID(); }
 

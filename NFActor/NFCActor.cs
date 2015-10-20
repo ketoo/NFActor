@@ -3,14 +3,13 @@
 //     Copyright (C) 2015-2015 lvsheng.huang <https://github.com/ketoo/NFActor>
 // </copyright>
 //-----------------------------------------------------------------------
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace NFrame
 {
@@ -20,7 +19,6 @@ namespace NFrame
         {
             mxID = xID;
             mxActorMng = xActorMng;
-            mxComponentMng = new NFCComponentMng();
         }
 
         public override NFIDENTID GetAddress()
@@ -34,7 +32,7 @@ namespace NFrame
         }
 
         //RegisterHandler
-        public override bool Execute(float fLastFrametime, float fStartedTime)
+        public override bool Execute()
         {
             NFIActorMessage xMsg;
             while (mxMessageQueue.TryDequeue(out xMsg) && null != xMsg)
@@ -45,10 +43,17 @@ namespace NFrame
             return false;
         }
 
+        public override bool RegisterHandler(Handler handler)
+        {
+            mxMessageHandler.Enqueue(handler);
+            return true;
+        }
+
         public override bool SendMsg(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage)
         {
             if (mxID == address)
             {
+                //目标就是自己
                 PushMessages(from, xMessage);
             }
             else
@@ -69,8 +74,23 @@ namespace NFrame
         public override bool PushMessages(NFIDENTID from, NFIActorMessage xMessage)
         {
             xMessage.nMasterActor = mxID;
-            xMessage.nFromActor = mxID;
-            mxMessageQueue.Enqueue(xMessage);
+            xMessage.nFromActor = from;
+            if (null != mxMessageHandler)
+            {
+                xMessage.xMasterHandler = new ConcurrentQueue<NFIActor.Handler>(mxMessageHandler);
+            }
+
+            if (!xMessage.bAsync)
+            {
+                //自己发送给自己，其实是同一个actor内部消息转发，不用排队
+                //同步消息，也不用排队，就等吧
+                ProcessMessage(xMessage);
+            }
+            else 
+            {
+                mxMessageQueue.Enqueue(xMessage);
+            }
+
             return true;
         }
 
@@ -81,23 +101,49 @@ namespace NFrame
         {
             NFIActorMessage xMsg = (NFIActorMessage)param;
 
-            Console.WriteLine("Task id:{0} ThreadID  {1}   {2}", Task.CurrentId, Thread.CurrentThread.ManagedThreadId, xMsg.data);
+            if (null != xMsg.xMasterHandler)
+            {
+                foreach (Handler xHandler in xMsg.xMasterHandler)
+                {
+                    //循环调用，难道每次copy队列一次
+                    xHandler(xMsg.nMasterActor, xMsg.nFromActor, xMsg);
+                }
+            }
+            
+            if (xMsg.bAsync)
+            {
+                //异步的才返回消息过去，同步的就不返回
+                NFCActorMng.Intance().SendMsg(xMsg.nFromActor, xMsg.nFromActor, xMsg);
+            }
 
-            NFCActorMng.Intance().SendMsg(xMsg.nFromActor, xMsg.nFromActor, xMsg);
-        }
-
-        private static void TaskMethodEnd(object param)
-        {
-            Console.WriteLine("Task id:{0}", Task.CurrentId);
         }
 
         private void ProcessMessage(NFIActorMessage xMessage)
         {
+            Task xTask = null;
+            if (xMessage.bAsync)
+            {
+                //异步就需要new
+                NFIActorMessage x = new NFIActorMessage(xMessage);
+                if (null == x.xMasterHandler)
+                {
+                    x.xMasterHandler = new ConcurrentQueue<NFIActor.Handler>(mxMessageHandler);
+                }
 
-            Task xTask = new Task(TaskMethod, xMessage);
-            //xTask.ContinueWith(TaskMethodEnd, xMessage);
+                xTask = Task.Factory.StartNew(TaskMethod, x);
+            }
+            else
+            {
+                xTask = Task.Factory.StartNew(TaskMethod, xMessage);
+            }
+            
+            if (null != xTask && !xMessage.bAsync)
+            {
+                //同步消息需要wait
+                xTask.Wait();
+            }
 
-            xTask.Start();
+
         }
         /////////////////////////////////////////////////////////////
 
@@ -106,19 +152,14 @@ namespace NFrame
             return mxActorMng;
         }
 
-        private NFIComponentMng GetComponentMng()
-        {
-            return mxComponentMng;
-        }
-
 
         /////////////////////////////////////////////////////////////
         private readonly NFIDENTID mxID = null;
         private readonly ConcurrentQueue<NFIActorMessage> mxMessageQueue = new ConcurrentQueue<NFIActorMessage>();
+        private readonly ConcurrentQueue<Handler> mxMessageHandler = new ConcurrentQueue<Handler>();
         /////////////////////////////////////////////////////////////
 
         private readonly NFIActorMng mxActorMng = null;
-        private readonly NFIComponentMng mxComponentMng = null;
 
     }
 }
