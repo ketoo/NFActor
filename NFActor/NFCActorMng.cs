@@ -35,14 +35,33 @@ namespace NFrame
 
         public override NFIDENTID CreateActor()
         {
+             return CreateActor(null);
+        }
+
+        public override NFIDENTID CreateActor(NFIActor.Handler handler)
+        {
             NFIDENTID xID = new NFIDENTID(0, ++mnActorIndex);
             NFIActor xActor = new NFCActor(xID, this);
 
+            //添加仍旧有问题，foreach中万一有其他线程添加
             bool bRet = mxActorDic.TryAdd(xID, xActor);
             if (bRet)
             {
-                xActor.Init();
-                xActor.AfterInit();
+                if (null != handler)
+                {
+                    RegisterHandler(xID, handler);
+
+
+                    NFIActorMessage xMessage = new NFIActorMessage();
+                    xMessage.bAsync = false;//同步消息
+
+                    xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_INIT;
+                    SendMsg(xActor.GetAddress(), null, xMessage);
+
+                    xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_AFTER_INIT;
+                    SendMsg(xActor.GetAddress(), null, xMessage);
+                }
+                
 
                 return xID;
             }
@@ -50,23 +69,38 @@ namespace NFrame
             return null;
         }
 
+        //运行过程中不能释放全部
         public override void ReleaseAllActor()
         {
             foreach (var kv in mxActorDic)
             {
-                mxNeedRemove.Enqueue(kv.Key);
+                ReleaseActor(kv.Value);
             }
         }
 
         public override bool ReleaseActor(NFIDENTID xID)
         {
-            mxNeedRemove.Enqueue(xID);
+            if (null == xID)
+            {
+                return false; ;
+            }
 
-            return false;
+            NFIActor xActor = null;
+            if (mxActorDic.TryRemove(xID, out xActor))
+            {
+                ReleaseActor(xActor);
+            }
+
+            return true;
         }
-
+        
         public override NFIActor GetActor(NFIDENTID xID)
         {
+            if (null == xID)
+            {
+                return null;
+            }
+
             NFIActor xActor = null;
             if (mxActorDic.TryGetValue(xID, out xActor))
             {
@@ -78,6 +112,11 @@ namespace NFrame
 
         public override bool RegisterHandler(NFIDENTID xID, NFIActor.Handler handler)
         {
+            if (null == xID || null == handler)
+            {
+                return false; ;
+            }
+
             NFIActor xActor = GetActor(xID);
             if (null != xActor)
             {
@@ -92,6 +131,11 @@ namespace NFrame
 
         public override bool SendMsg(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage)
         {
+            if (null == address || null == xMessage)
+            {
+                return false; ;
+            }
+
             NFIActor xActor = GetActor(address);
             if (null != xActor)
             {
@@ -103,35 +147,28 @@ namespace NFrame
             return false;
         }
 
-        public override bool Execute()
+        ///////////////////////////////////////////////////////
+        private bool ReleaseActor(NFIActor xActor)
         {
-            foreach (NFIDENTID k in mxNeedRemove)
+            if (null == xActor)
             {
-                NFIActor xActor = null;
-                if (mxActorDic.TryRemove(k, out xActor))
-                {
-                    xActor.BeforeShut();
-                    xActor.Shut();
-
-                    xActor = null;
-
-                    return true;
-                }
+                return false;
             }
 
-            foreach (var kv in mxActorDic)
-            {
-                kv.Value.Execute();
-            }
+            NFIActorMessage xMessage = new NFIActorMessage();
+            xMessage.bAsync = false;//同步消息
 
-            return false;
+            xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_BEFORE_SHUT;
+            xActor.SendMsg(xActor.GetAddress(), null, xMessage);
+
+            xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_SHUT;
+            xActor.SendMsg(xActor.GetAddress(), null, xMessage);
+
+            return true;
         }
-
         ///////////////////////////////////////////////////////
 
         private readonly ConcurrentDictionary<NFIDENTID, NFIActor> mxActorDic = new ConcurrentDictionary<NFIDENTID, NFIActor>();
-        private readonly ConcurrentQueue<NFIDENTID> mxNeedRemove = new ConcurrentQueue<NFIDENTID>();
-        //private readonly ConcurrentDictionary<NFIDENTID, NFIActor> mxNeedAdd = new ConcurrentDictionary<NFIDENTID, NFIActor>();
         private int mnActorIndex = 0;
     }
 }

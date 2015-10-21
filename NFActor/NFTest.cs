@@ -13,18 +13,146 @@ using System.Collections;
 
 namespace NFrame
 {
-    
+
     public class NFTest
     {
-        class TestHandler
+        class TestHandler1 : NFBehaviour
         {
             public void Handler(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage)
             {
-                Console.WriteLine("Sleep: 5000, ThreadID: " + Thread.CurrentThread.ManagedThreadId );
+                Console.WriteLine("handler ThreadID: " + Thread.CurrentThread.ManagedThreadId + " " + xMessage.eType);
 
-                Thread.Sleep(5000);
+                switch (xMessage.eType)
+                {
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_INIT:
+                        Init();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_AFTER_INIT:
+                        AfterInit();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_EXCUTE:
+                        Execute();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_BEFORE_SHUT:
+                        BeforeShut();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_SHUT:
+                        Shut();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_TEST_MSG:
+                        {
+                            NFIActorMessage xMsgData = new NFIActorMessage();
+                            xMsgData.data = "test1";
+                            xMsgData.bAsync = false;
+                            xMsgData.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_DATA_MSG;
 
-                Console.WriteLine("handler ThreadID: " +  Thread.CurrentThread.ManagedThreadId + " " +  xMessage.data);
+                            Console.WriteLine("handler ThreadID: " + Thread.CurrentThread.ManagedThreadId + " " + xMsgData.data);
+
+                            NFCActorMng.Intance().SendMsg(new NFIDENTID(0, 2), address, xMsgData);
+
+                            Console.WriteLine("handler ThreadID: " + Thread.CurrentThread.ManagedThreadId + " " + xMsgData.data);
+
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            public override bool Init() 
+            { 
+                return false;
+            }
+
+            public override bool AfterInit()
+            {
+                return false; 
+            }
+
+            public override bool BeforeShut()
+            {
+                return false;
+            }
+
+            public override bool Shut() 
+            { 
+                return false; 
+            }
+
+            public override bool Execute() 
+            { 
+                return false; 
+            }
+
+            public override NFIDENTID Self() 
+            { 
+                return new NFIDENTID();
+            }
+        }
+
+        class TestHandler2 : NFBehaviour
+        {
+            public void Handler(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage)
+            {
+                switch (xMessage.eType)
+                {
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_INIT:
+                        Init();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_AFTER_INIT:
+                        AfterInit();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_EXCUTE:
+                        Execute();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_BEFORE_SHUT:
+                        BeforeShut();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_SHUT:
+                        Shut();
+                        break;
+                    case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_DATA_MSG:
+                        {
+                            //NFIActorMessage xMsgData = new NFIActorMessage();
+                            xMessage.data = "1111111111111111111";
+                            //xMsgData.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_DATA_MSG;
+                            //NFCActorMng.Intance().SendMsg(from, address, xMsgData);
+                            Thread.Sleep(2000);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            public override bool Init() 
+            {
+                return false; 
+            }
+
+            public override bool AfterInit() 
+            {
+                return false;
+            }
+
+            public override bool BeforeShut() 
+            { 
+                return false;
+            }
+
+            public override bool Shut() 
+            { 
+                return false; 
+            }
+
+            public override bool Execute() 
+            { 
+                return false;
+            }
+
+            public override NFIDENTID Self()
+            { 
+                return new NFIDENTID(); 
             }
         }
 
@@ -32,29 +160,31 @@ namespace NFrame
         {
             //Start();
 
-            TestHandler xTestHandler = new TestHandler();
+            TestHandler1 xTestHandler1 = new TestHandler1();
+            TestHandler2 xTestHandler2 = new TestHandler2();
 
             Console.WriteLine("start run... ThreadID: " + Thread.CurrentThread.ManagedThreadId);
 
-            NFIDENTID xID = NFCActorMng.Intance().CreateActor();
-            NFCActorMng.Intance().RegisterHandler(xID, xTestHandler.Handler);
+            NFIDENTID xID1 = NFCActorMng.Intance().CreateActor(xTestHandler1.Handler);
+            NFIDENTID xID2 = NFCActorMng.Intance().CreateActor(xTestHandler2.Handler);
 
-            NFIActorMessage xMsgData = new NFIActorMessage();
-            xMsgData.data = "test1";
-            //xMsgData.bAsync = false;
+             NFIActorMessage xMsgData = new NFIActorMessage();
+             xMsgData.data = "test";
+             xMsgData.bAsync = false;
+             xMsgData.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_TEST_MSG;
 
-            NFCActorMng.Intance().SendMsg(xID, null, xMsgData);
+            NFCActorMng.Intance().SendMsg(xID1, null, xMsgData);
+            
+//             while(true)
+//             {
+// 
+//                 Thread.Sleep(1000);
+// 
+//                 Console.WriteLine("looping... ThreadID: " + Thread.CurrentThread.ManagedThreadId);
+// 
+//             }
 
-            Console.WriteLine("start loop... ThreadID: " + Thread.CurrentThread.ManagedThreadId);
-
-            while(true)
-            {
-
-                Thread.Sleep(1);
-
-                NFCActorMng.Intance().Execute();
-            }
-
-           }
+            NFCActorMng.Intance().ReleaseAllActor();
+        }
     }
 }

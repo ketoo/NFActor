@@ -91,6 +91,8 @@ namespace NFrame
                 mxMessageQueue.Enqueue(xMessage);
             }
 
+            Execute();
+
             return true;
         }
 
@@ -120,6 +122,11 @@ namespace NFrame
 
         private void ProcessMessage(NFIActorMessage xMessage)
         {
+            if (xMessage.nMasterActor != GetAddress())
+            {
+                return;
+            }
+
             Task xTask = null;
             if (xMessage.bAsync)
             {

@@ -14,6 +14,7 @@ namespace NFrame
     public abstract class NFIActorMng : NFBehaviour
     {
         public abstract NFIDENTID CreateActor();
+        public abstract NFIDENTID CreateActor(NFIActor.Handler handler);
 
         public abstract bool ReleaseActor(NFIDENTID xID);
 
