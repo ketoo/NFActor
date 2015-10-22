@@ -19,6 +19,7 @@ namespace NFrame
         {
             eType = EACTOR_MESSAGE_ID.EACTOR_UNKNOW;
             bAsync = true;
+            bReturn = true;
             nSubMsgID = 0;
 
             t = System.DateTime.Now;
@@ -28,6 +29,7 @@ namespace NFrame
         {
             eType = x.eType;
             bAsync = x.bAsync;
+            bReturn = x.bReturn;
 	        nSubMsgID = x.nSubMsgID;
             nFromActor = x.nFromActor;
             nMasterActor = x.nMasterActor;
@@ -57,11 +59,13 @@ namespace NFrame
 		    EACTOR_LOG_MSG,
             EACTOR_EVENT_MSG,
             EACTOR_DATA_MSG,
+
             EACTOR_TEST_MSG,
 	    }
 
         public EACTOR_MESSAGE_ID eType;
-        public bool bAsync;
+        public bool bAsync;//true=异步,默认异步
+        public bool bReturn;
 	    public int nSubMsgID;
         public NFIDENTID nFromActor;
         public NFIDENTID nMasterActor;
@@ -72,14 +76,12 @@ namespace NFrame
 
     public abstract class NFIActor : NFBehaviour
     {
-        public delegate void Handler(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage);
+        public delegate void Handler(NFIActorMessage xMessage);
 
         public abstract bool RegisterHandler(Handler handler);
 
         public abstract NFIDENTID GetAddress();
         public abstract int GetNumQueuedMessages();
-
-        public abstract bool SendMsg(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage);
         public abstract bool PushMessages(NFIDENTID from, NFIActorMessage xMessage);
     }
 }

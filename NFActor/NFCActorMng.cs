@@ -32,7 +32,6 @@ namespace NFrame
             return _instance;
         }
 
-
         public override NFIDENTID CreateActor()
         {
              return CreateActor(null);
@@ -51,9 +50,9 @@ namespace NFrame
                 {
                     RegisterHandler(xID, handler);
 
-
                     NFIActorMessage xMessage = new NFIActorMessage();
                     xMessage.bAsync = false;//同步消息
+                    xMessage.bReturn = false;//无需返回
 
                     xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_INIT;
                     SendMsg(xActor.GetAddress(), null, xMessage);
@@ -62,7 +61,6 @@ namespace NFrame
                     SendMsg(xActor.GetAddress(), null, xMessage);
                 }
                 
-
                 return xID;
             }
 
@@ -93,28 +91,12 @@ namespace NFrame
 
             return true;
         }
-        
-        public override NFIActor GetActor(NFIDENTID xID)
-        {
-            if (null == xID)
-            {
-                return null;
-            }
-
-            NFIActor xActor = null;
-            if (mxActorDic.TryGetValue(xID, out xActor))
-            {
-                return xActor;
-            }
-
-            return null;
-        }
 
         public override bool RegisterHandler(NFIDENTID xID, NFIActor.Handler handler)
         {
             if (null == xID || null == handler)
             {
-                return false; ;
+                return false;
             }
 
             NFIActor xActor = GetActor(xID);
@@ -139,15 +121,30 @@ namespace NFrame
             NFIActor xActor = GetActor(address);
             if (null != xActor)
             {
-                xActor.PushMessages(from, xMessage);
-
-                return true;
+                return xActor.PushMessages(from, xMessage);
             }
 
             return false;
         }
 
         ///////////////////////////////////////////////////////
+
+        private NFIActor GetActor(NFIDENTID xID)
+        {
+            if (null == xID)
+            {
+                return null;
+            }
+
+            NFIActor xActor = null;
+            if (mxActorDic.TryGetValue(xID, out xActor))
+            {
+                return xActor;
+            }
+
+            return null;
+        }
+
         private bool ReleaseActor(NFIActor xActor)
         {
             if (null == xActor)
@@ -159,10 +156,10 @@ namespace NFrame
             xMessage.bAsync = false;//同步消息
 
             xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_BEFORE_SHUT;
-            xActor.SendMsg(xActor.GetAddress(), null, xMessage);
+            xActor.PushMessages(null, xMessage);
 
             xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_SHUT;
-            xActor.SendMsg(xActor.GetAddress(), null, xMessage);
+            xActor.PushMessages(null, xMessage);
 
             return true;
         }

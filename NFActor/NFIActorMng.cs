@@ -19,9 +19,7 @@ namespace NFrame
         public abstract bool ReleaseActor(NFIDENTID xID);
 
         public abstract void ReleaseAllActor();
-
-        public abstract NFIActor GetActor(NFIDENTID xID);
-
+        
         public abstract bool RegisterHandler(NFIDENTID xID, NFIActor.Handler handler); 
 
         public abstract bool SendMsg(NFIDENTID address, NFIDENTID from, NFIActorMessage xMessage);
