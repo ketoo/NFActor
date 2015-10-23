@@ -1,4 +1,9 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="NFCScheduler.cs">
+//     Copyright (C) 2015-2015 lvsheng.huang <https://github.com/ketoo/NFActor>
+// </copyright>
+//-----------------------------------------------------------------------
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +29,7 @@ namespace NFrame
             NFIScheduler xScheduler = (NFIScheduler)x;
             while (true && null != xScheduler)
             {
-                Thread.Sleep(5);
+                //Thread.Sleep(5);
 
                 xScheduler.Execute();
             }

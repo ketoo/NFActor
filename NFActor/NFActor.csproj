@@ -49,6 +49,7 @@
     <Compile Include="NFIActor.cs" />
     <Compile Include="NFIActorMng.cs" />
     <Compile Include="NFIdentID.cs" />
+    <Compile Include="NFIActorMessage.cs" />
     <Compile Include="NFIScheduler.cs" />
     <Compile Include="NFTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
