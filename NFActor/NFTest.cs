@@ -115,16 +115,8 @@ namespace NFrame
                         break;
                     case NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_DATA_MSG:
                         {
-                            //NFIActorMessage xMsgData = new NFIActorMessage();
                             xMessage.data = "1111111111111111111";
                             xMessage.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_TEST_MSG;
-                            //NFCActorMng.Intance().SendMsg(from, address, xMsgData);
-                            //Thread.Sleep(2000);
-                            if (xMessage.bAsync)
-                            {
-                                //异步的才返回消息过去，就是pingpong
-                                //NFCActorMng.Intance().SendMsg(xMessage.nFromActor, xMessage.nMasterActor, xMessage);
-                            }
                         }
                         break;
                     default:
@@ -163,45 +155,29 @@ namespace NFrame
             }
         }
 
-        static void TaskMethon()
-        {
-            Console.WriteLine("ThreadID: " + Thread.CurrentThread.ManagedThreadId);
-
-            while(true)
-            {
-                Thread.Sleep(1);   
-            }
-        }
-
         static void Main()
         {
-            //Start();
-
             TestHandler1 xTestHandler1 = new TestHandler1();
             TestHandler2 xTestHandler2 = new TestHandler2();
 
             Console.WriteLine("start run... ThreadID: " + Thread.CurrentThread.ManagedThreadId);
 
-//             NFIDENTID xID1 = NFCActorMng.Intance().CreateActor(xTestHandler1.Handler);
-//             NFIDENTID xID2 = NFCActorMng.Intance().CreateActor(xTestHandler2.Handler);
-// 
-//              NFIActorMessage xMsgData = new NFIActorMessage();
-//              xMsgData.data = "test";
-//              xMsgData.bAsync = false;
-//              xMsgData.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_TEST_MSG;
-// 
-//              NFCActorMng.Intance().SendMsg(xID1, xID2, xMsgData);
+            NFIDENTID xID1 = NFCActorMng.Intance().CreateActor(xTestHandler1.Handler);
+            NFIDENTID xID2 = NFCActorMng.Intance().CreateActor(xTestHandler2.Handler);
 
-            for (int i = 0; i < 100; ++i )
-            {
-                //Task xTask = Task.Factory.StartNew(TaskMethon);
-                Task xTask = new Task(TaskMethon);
-                xTask.Start();
-            }
+             NFIActorMessage xMsgData = new NFIActorMessage();
+             xMsgData.data = "test";
+
+             xMsgData.bAsync = false;//控制为同步消息还是异步消息
+
+             xMsgData.eType = NFIActorMessage.EACTOR_MESSAGE_ID.EACTOR_TEST_MSG;
+
+             NFCActorMng.Intance().SendMsg(xID1, xID2, xMsgData);
+
+             Console.WriteLine("start loop... ThreadID: " + Thread.CurrentThread.ManagedThreadId);
 
             while(true)
             {
-
                 Thread.Sleep(1000);                
             }
 

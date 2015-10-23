@@ -64,7 +64,7 @@ namespace NFrame
 	    }
 
         public EACTOR_MESSAGE_ID eType;
-        public bool bAsync;//true=异步,默认异步
+        public bool bAsync;//true=异步,false=同步,默认异步
         public bool bReturn;
 	    public int nSubMsgID;
         public NFIDENTID nFromActor;

@@ -32,6 +32,11 @@ namespace NFrame
             return _instance;
         }
 
+        private NFCActorMng()
+        {
+            mxScheduler = new NFCScheduler(this);
+        }
+
         public override NFIDENTID CreateActor()
         {
              return CreateActor(null);
@@ -65,6 +70,11 @@ namespace NFrame
             }
 
             return null;
+        }
+
+        public override NFIScheduler GetScheduler()
+        {
+            return mxScheduler;
         }
 
         //运行过程中不能释放全部
@@ -127,9 +137,13 @@ namespace NFrame
             return false;
         }
 
-        ///////////////////////////////////////////////////////
+        public override bool Execute()
+        {
+            //调度，send的时候记录哪些有(异步)消息，然后这里统一调度过去
+            return false; 
+        }
 
-        private NFIActor GetActor(NFIDENTID xID)
+        public override NFIActor GetActor(NFIDENTID xID)
         {
             if (null == xID)
             {
@@ -144,6 +158,8 @@ namespace NFrame
 
             return null;
         }
+
+        ///////////////////////////////////////////////////////
 
         private bool ReleaseActor(NFIActor xActor)
         {
@@ -164,7 +180,7 @@ namespace NFrame
             return true;
         }
         ///////////////////////////////////////////////////////
-
+        private readonly NFIScheduler mxScheduler;
         private readonly ConcurrentDictionary<NFIDENTID, NFIActor> mxActorDic = new ConcurrentDictionary<NFIDENTID, NFIActor>();
         private int mnActorIndex = 0;
     }

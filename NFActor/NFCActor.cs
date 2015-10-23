@@ -31,35 +31,45 @@ namespace NFrame
             return mxMessageQueue.Count;
         }
 
-//         public static void TaskExecuteMethod(ConcurrentQueue<NFIActorMessage> x)
-//         {
-//             NFIActorMessage xMsg;
-//             while (x.TryDequeue(out xMsg) && null != xMsg)
-//             {
-//                 if (null == xMsg.xMasterHandler)
-//                 {
-//                     return;
-//                 }
-// 
-//                 Task xTask = Task.Factory.StartNew(TaskMethod, xMsg);
-//                 if (null != xTask)
-//                 {
-//                     //同步消息需要wait
-//                     xTask.Wait();
-//                 }
-//             }
-// 
-//         }
+        public static void ExecuteAsync(object x)
+        {
+            NFIActor xActor = (NFIActor)x;
+            if (null != xActor)
+            {
+                xActor.Execute();
+            }
+        }
 
         public override bool Execute()
         {
             NFIActorMessage xMsg;
             while (mxMessageQueue.TryDequeue(out xMsg) && null != xMsg)
             {
-                ProcessMessage(xMsg);
+                if (xMsg.nMasterActor != GetAddress())
+                {
+                    return false;
+                }
+
+                if (null == xMsg.xMasterHandler)
+                {
+                    return false;
+                }
+
+                if (!xMsg.bAsync)
+                {
+                    return false;
+                }
+
+                if (null != xMsg.xMasterHandler)
+                {
+                    foreach (Handler xHandler in xMsg.xMasterHandler)
+                    {
+                        xHandler(xMsg);
+                    }
+                }
             }
 
-            return false;
+            return true;
         }
 
         public override bool RegisterHandler(Handler handler)
@@ -81,15 +91,18 @@ namespace NFrame
             if (!xMessage.bAsync)
             {
                 //同步消息，也不用排队，就等吧
-                ProcessMessage(xMessage);
+                ProcessMessageSyns(xMessage);
             }
             else 
             {
                 //异步消息，需要new新的msg，否则担心masteractor还需使用它
                 NFIActorMessage xMsg = new NFIActorMessage(xMessage);
                 mxMessageQueue.Enqueue(xMsg);
-
-                Execute();
+                NFIScheduler xScheduler = mxActorMng.GetScheduler();
+                if(null != xScheduler)
+                {
+                    xScheduler.AddToScheduler(mxID);
+                }
             }
 
             return true;
@@ -97,8 +110,7 @@ namespace NFrame
 
         /////////////////////////////////////////////////////////////
 
-
-        private static void TaskMethod(object param)
+        private static void TaskMethodSync(object param)
         {
             NFIActorMessage xMsg = (NFIActorMessage)param;
 
@@ -111,7 +123,7 @@ namespace NFrame
             }
         }
 
-        private void ProcessMessage(NFIActorMessage xMessage)
+        private void ProcessMessageSyns(NFIActorMessage xMessage)
         {
             if (xMessage.nMasterActor != GetAddress())
             {
@@ -122,15 +134,18 @@ namespace NFrame
             {
                 return;
             }
+            if (xMessage.bAsync)
+            {
+                return;
+            }
 
-            Task xTask = Task.Factory.StartNew(TaskMethod, xMessage);
-            if (null != xTask && !xMessage.bAsync)
+            Task xTask = Task.Factory.StartNew(TaskMethodSync, xMessage);
+            if (null != xTask)
             {
                 //同步消息需要wait
                 xTask.Wait();
             }
         }
-        /////////////////////////////////////////////////////////////
 
         private NFIActorMng GetActorMng()
         {
@@ -139,13 +154,10 @@ namespace NFrame
 
 
         /////////////////////////////////////////////////////////////
-        private readonly NFIDENTID mxID = null;
+        private readonly NFIDENTID mxID;
+        private readonly NFIActorMng mxActorMng;
+
         private readonly ConcurrentQueue<NFIActorMessage> mxMessageQueue = new ConcurrentQueue<NFIActorMessage>();
         private readonly ConcurrentQueue<Handler> mxMessageHandler = new ConcurrentQueue<Handler>();
-        /////////////////////////////////////////////////////////////
-
-        private readonly NFIActorMng mxActorMng = null;
-        private readonly Task mxTask = null;
-
     }
 }
