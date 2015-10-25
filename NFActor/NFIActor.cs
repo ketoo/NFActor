@@ -22,5 +22,10 @@ namespace NFrame
         public abstract NFIDENTID GetAddress();
         public abstract int GetNumQueuedMessages();
         public abstract bool PushMessages(NFIDENTID from, NFIActorMessage xMessage);
+
+//         public void SendMessage(string methodName);
+//         public T GetComponent<T>();
+//         public Component GetComponent(string type);
+
     }
 }
