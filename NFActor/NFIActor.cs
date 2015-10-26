@@ -23,9 +23,30 @@ namespace NFrame
         public abstract int GetNumQueuedMessages();
         public abstract bool PushMessages(NFIDENTID from, NFIActorMessage xMessage);
 
-//         public void SendMessage(string methodName);
-//         public T GetComponent<T>();
-//         public Component GetComponent(string type);
+        public abstract bool AddComponent(Type xType);
+        public abstract NFBehaviour GetComponent(Type xType);
 
+        public T GetComponent<T>()
+        {
+            Type xType = typeof(T);
+            NFBehaviour xBehaviour = GetComponent(xType);
+            if (null != xBehaviour)
+            {
+
+            }
+
+            return default(T);
+        }
+
+        public bool AddComponent<T>()
+        {
+            Type xType = typeof(T);
+            if (xType.IsSubclassOf(typeof(NFBehaviour)))
+            {
+                return AddComponent(xType);
+            }
+
+            return false;
+        }
     }
 }
